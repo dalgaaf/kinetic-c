@@ -10,34 +10,33 @@ void SystemTestSetup(SystemTestFixture* fixture)
 
     fixture->instance = (SystemTestInstance) {
         .value = {
-            .data = fixture->data,
+            .data = fixture->instance.data,
             .len = PDU_VALUE_MAX_LEN
         }
     };
     fixture->instance.request.message = &fixture->instance.requestMsg;
-    fixture->instance.nonBlocking = false;
+
     KINETIC_MESSAGE_INIT(fixture->instance.request.message);
 
     int i;
     for (i = 0; i < fixture->instance.value.len; i++)
     {
-        fixture->data[i] = (uint8_t)(0x0ff & i);
+        fixture->instance.data[i] = (uint8_t)(0x0ff & i);
     }
 
-    if (!fixture->connected)
+    if (!fixture->connection.connected)
     {
         KineticClient_Init(NULL);
 
-        KINETIC_CONNECTION_INIT(&fixture->connection, fixture->identity, fixture->hmacKey);
+        KINETIC_CONNECTION_INIT(&fixture->connection, &fixture->config);
 
         bool success = KineticClient_Connect(
             &fixture->connection,
-            fixture->host, fixture->port, fixture->instance.nonBlocking,
-            fixture->clusterVersion, fixture->identity, fixture->hmacKey);
+            &fixture->connection.config);
         TEST_ASSERT_TRUE(success);
         TEST_ASSERT(fixture->connection.socketDescriptor >= 0);
-        fixture->expectedSequence = 0;
-        fixture->connected = true;
+        fixture->instance.expectedSequence = 0;
+        fixture->connection.connected = true;
     }
 
     fixture->instance.operation =

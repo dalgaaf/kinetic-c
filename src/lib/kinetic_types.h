@@ -68,7 +68,7 @@
 
 typedef ProtobufCBinaryData ByteArray;
 #define BYTE_ARRAY_NONE \
-    (ByteArray){}
+    (ByteArray){.data = NULL, .len = 0}
 #define BYTE_ARRAY_INIT(_data) (ByteArray) \
     {.data = (uint8_t*)(_data), .len = sizeof(_data)};
 #define BYTE_ARRAY_INIT_WITH_LEN(_data, _len) \
@@ -81,51 +81,108 @@ typedef ProtobufCBinaryData ByteArray;
     ByteArray (_name) = {.data = (uint8_t*(_buf)), .len = 0};
 #define BYTE_ARRAY_INIT_FROM_CSTRING(str) \
     (ByteArray){.data = (uint8_t*)(str), .len = strlen(str)}
-#define BYTE_ARRAY_FILL_WITH_DUMMY_DATA(_array) \
-    {int i=0; for(;i<(_array).len;++i){(_array).data[i] = (uint8_t)(i & 0xFFu);} }
+#define BYTE_ARRAY_FILL_WITH_DUMMY_DATA(_arr) \
+{ \
+    uint8_t v=0; \
+    for(int i=0; i < (_arr).len; i++) { \
+        (_arr).data[i] = v++; } \
+}
+#define BYTE_ARRAY_CREATE_WITH_DUMMY_DATA(_name, _len) \
+    BYTE_ARRAY_CREATE((_name), (_len)); \
+    BYTE_ARRAY_FILL_WITH_DUMMY_DATA((_name));
 
-// Kinetic Device Client Connection
-typedef struct _KineticConnection
+typedef struct _ByteBuffer
 {
-    bool    connected;
-    bool    nonBlocking;
-    int     port;
-    int     socketDescriptor;
-    int64_t connectionID;
-    char    host[HOST_NAME_MAX];
+    ByteArray content;
+    size_t maxLen;
+    bool allocated;
+} ByteBuffer;
+#define BYTE_BUFFER_INIT(_data, _len, _max_len) (ByteBuffer) { \
+    .content = {.data = (_data), .len = (_len)}, \
+    .maxLen = (_max_len) }
+#define BYTE_BUFFER_INIT_ALLOCATED(_data, _len, _max_len) (ByteBuffer) { \
+    .content = {.data = (_data), .len = (_len)}, \
+    .maxLen = (_max_len), \
+    .bufferAllocated = true }
+#define BYTE_BUFFER_RELEASE(_buf) { \
+    if((_buf).content.data && (_buf).allocated) { \
+        free((_buf).content.data); \
+        (_buf) = {.allocated = false}; } }
 
-    // Optional field - default value is 0
+// Kinetic Device Session Configuration
+typedef struct _KineticConnectionConfig
+{
+    // Host name or IP address of the Kinetic Device
+    char host[HOST_NAME_MAX];
+
+    // TCP port of the Kinetic Device
+    // Optional, default port is used if not specified
+    int port;
+
+    // The communications mode to use for the session with the Kinetic Device.
+    // Optional, defaults to non-blocking is not specified
+    bool nonBlocking;
+
     // The version number of this cluster definition. If this is not equal to
     // the value on the device, the request is rejected and will return a
-    // `VERSION_FAILURE` `statusCode` in the `Status` message.
+    // VERSION_FAILURE statusCode in the Status message.
+    // Required, must match Kinetic Device configuration
     int64_t clusterVersion;
 
-    // Required field
     // The identity associated with this request. See the ACL discussion above.
     // The Kinetic Device will use this identity value to lookup the
     // HMAC key (shared secret) to verify the HMAC.
+    // Required, identity of an established ACL on the Kinetic Device
     int64_t identity;
 
-    // Required field
     // This is the identity's HMAC Key. This is a shared secret between the
     // client and the device, used to sign requests.
-    uint8_t keyData[KINETIC_MAX_KEY_LEN];
+    // Required, HMAC key for the established ACL for the specified 'identity'
     ByteArray key;
 
-    // Required field
-    // A monotonically increasing number for each request in a TCP connection.
+} KineticConnectionConfig;
+
+// Kinetic Device Session
+typedef struct _KineticConnection
+{
+    // Connection configuration
+    KineticConnectionConfig config;
+
+    // State of connection (true if connected)
+    bool connected;
+
+    // Socket (file) descriptor for opened socket
+    // Default is -1 (invalid) if not specified
+    int socketDescriptor;
+
+    // A unique number for this connection between the source and target.
+    // On the first request to the drive, this should be the time of day in
+    // seconds since 1970. The drive can change this number and the client must
+    // continue to use the new number and the number must remain constant
+    // during the session
+    // Required protobuf field
+    int64_t connectionID;
+
+    // Sequence is a monotonically increasing number for each request in a TCP
+    // connection.
+    // Required protobuf field
     int64_t sequence;
+
+    // Buffer to hold specified HMAC key from comfiguration/init
+    uint8_t keyData[KINETIC_MAX_KEY_LEN];
+
 } KineticConnection;
-#define KINETIC_CONNECTION_INIT(_con, _id, _key) { \
+
+#define KINETIC_CONNECTION_INIT(_con, _cfg) { \
     (*_con) = (KineticConnection) { \
+        .config = *(_cfg), \
         .socketDescriptor = -1, \
         .connectionID = time(NULL), \
-        .identity = (_id), \
-        .sequence = 0, \
     }; \
-    (*_con).key = (ByteArray){.data = (*_con).keyData, .len = (_key).len}; \
-    if ((_key).data != NULL && (_key).len > 0) { \
-        memcpy((_con)->keyData, (_key).data, (_key).len); } \
+    if ((*_cfg).key.data && (*_cfg).key.len) { \
+        memcpy((*_con).keyData, (*_cfg).key.data, (*_cfg).key.len); \
+        (*_con).config.key.data = (*_con).keyData; \
+    } \
 }
 
 
@@ -228,9 +285,9 @@ typedef struct _KineticPDU
     KineticMessage* pmsg = (_msg); \
     if ((pmsg) != NULL) { \
         pmsg->header.has_clusterVersion = true; \
-        pmsg->header.clusterVersion = (_con)->clusterVersion; \
+        pmsg->header.clusterVersion = (_con)->config.clusterVersion; \
         pmsg->header.has_identity = true; \
-        pmsg->header.identity = (_con)->identity; \
+        pmsg->header.identity = (_con)->config.identity; \
         pmsg->header.has_connectionID = true; \
         pmsg->header.connectionID = (_con)->connectionID; \
         pmsg->header.has_sequence = true; \
@@ -239,8 +296,6 @@ typedef struct _KineticPDU
 }
 
 #define KINETIC_PDU_INIT(_pdu, _con, _msg) { \
-    assert((_pdu) != NULL); \
-    assert((_con) != NULL); \
     KineticMessage* pmsg = (_msg); \
     (_pdu)->connection = (_con); \
     (_pdu)->message = pmsg; \

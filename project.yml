@@ -89,7 +89,7 @@
       - -D"$": DEFINES_TEST_PREPROCESS
       - -DGNU_COMPILER
       - -std=c99
-      - -Wall
+      - -Wpedantic
       - ${1}
   :test_compiler:
     :executable: gcc
@@ -99,7 +99,7 @@
       - -D"$": COLLECTION_DEFINES_TEST_AND_VENDOR
       - -DGNU_COMPILER
       - -std=c99
-      - -Wall
+      - -Wpedantic
       - -g
       - -c ${1}
       - -o ${2}
@@ -126,7 +126,7 @@
       - -D"$": 'COLLECTION_DEFINES_RELEASE_AND_VENDOR'
       - -DGNU_COMPILER
       - -std=c99
-      - -Wall
+      - -Wpedantic
       - "-c \"${1}\""
       - "-o \"${2}\""
   :release_linker:

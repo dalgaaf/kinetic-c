@@ -57,7 +57,7 @@ void KineticLogger_Log(const char* message)
     }
 
     fd = LogToConsole ? stderr : fopen(LogFile, "a");
-    if (fd >= 0)
+    if ((int)fd >= 0)
     {
         fprintf(fd, "%s\n", message);
         fflush(fd);

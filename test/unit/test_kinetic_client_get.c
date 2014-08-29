@@ -42,6 +42,15 @@ void tearDown(void)
 void test_KineticClient_Get_should_execute_GET_operation_and_populate_supplied_buffer_with_value(void)
 {
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     KineticOperation operation;
     KineticMessage requestMsg;
     KineticPDU request, response;
@@ -71,7 +80,6 @@ void test_KineticClient_Get_should_execute_GET_operation_and_populate_supplied_b
     response.proto->command->status->has_code = true;
     response.proto->command->status->code = KINETIC_PROTO_STATUS_STATUS_CODE_SUCCESS;
 
-    KINETIC_CONNECTION_INIT(&connection, 12, key);
     KineticMessage_Init_Expect(&requestMsg);
     KineticPDU_Init_Expect(&request, &connection, &requestMsg);
     KineticPDU_Init_Expect(&response, &connection, NULL);
@@ -91,6 +99,15 @@ void test_KineticClient_Get_should_execute_GET_operation_and_populate_supplied_b
 void test_KineticClient_Get_should_execute_GET_operation_and_populate_embedded_PDU_buffer_for_value_if_none_supplied(void)
 {
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     KineticOperation operation;
     KineticMessage requestMsg;
     KineticPDU request, response;
@@ -116,7 +133,6 @@ void test_KineticClient_Get_should_execute_GET_operation_and_populate_embedded_P
     response.proto->command->status->has_code = true;
     response.proto->command->status->code = KINETIC_PROTO_STATUS_STATUS_CODE_SUCCESS;
 
-    KINETIC_CONNECTION_INIT(&connection, 12, key);
     KineticMessage_Init_Expect(&requestMsg);
     KineticPDU_Init_Expect(&request, &connection, &requestMsg);
     KineticPDU_Init_Expect(&response, &connection, NULL);
@@ -139,6 +155,15 @@ void test_KineticClient_Get_should_execute_GET_operation_and_populate_embedded_P
 void test_KineticClient_Get_should_execute_GET_operation_and_retrieve_only_metadata(void)
 {
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     KineticOperation operation;
     KineticMessage requestMsg;
     KineticPDU request, response;
@@ -166,7 +191,6 @@ void test_KineticClient_Get_should_execute_GET_operation_and_retrieve_only_metad
     response.proto->command->status->has_code = true;
     response.proto->command->status->code = KINETIC_PROTO_STATUS_STATUS_CODE_SUCCESS;
 
-    KINETIC_CONNECTION_INIT(&connection, 12, key);
     KineticMessage_Init_Expect(&requestMsg);
     KineticPDU_Init_Expect(&request, &connection, &requestMsg);
     KineticPDU_Init_Expect(&response, &connection, NULL);

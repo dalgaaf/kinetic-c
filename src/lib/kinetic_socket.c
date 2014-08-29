@@ -217,7 +217,6 @@ bool KineticSocket_ReadProtobuf(int socketDescriptor, KineticProto** message, co
         }
         else
         {
-            // LOG("Protobuf unpacked successfully!");
             *message = unpacked;
             success = true;
         }

@@ -41,6 +41,14 @@ void tearDown(void)
 void test_KineticClient_Put_should_execute_PUT_operation(void)
 {
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
 
     KineticProto responseProto = KINETIC_PROTO__INIT;
     KineticProto_Command responseCommand = KINETIC_PROTO_COMMAND__INIT;
@@ -71,7 +79,6 @@ void test_KineticClient_Put_should_execute_PUT_operation(void)
     response.proto->command->status->has_code = true;
     response.proto->command->status->code = KINETIC_PROTO_STATUS_STATUS_CODE_SUCCESS;
 
-    KINETIC_CONNECTION_INIT(&connection, 1234, hmacKey);
     KineticMessage_Init_Expect(&requestMsg);
     KineticPDU_Init_Expect(&request, &connection, &requestMsg);
     KineticPDU_Init_Expect(&response, &connection, NULL);

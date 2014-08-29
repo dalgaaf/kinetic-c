@@ -27,19 +27,13 @@
 
 KineticProto_Status_StatusCode KineticClient_ExecuteOperation(KineticOperation* operation);
 
-void KineticClient_Init(const char* logFile)
+void KineticClient_Init(char const* logFile)
 {
     KineticLogger_Init(logFile);
 }
 
-bool KineticClient_Connect(
-    KineticConnection* connection,
-    const char* host,
-    int port,
-    bool nonBlocking,
-    int64_t clusterVersion,
-    int64_t identity,
-    ByteArray key)
+bool KineticClient_Connect(KineticConnection * connection,
+    KineticConnectionConfig const * config)
 {
     if (connection == NULL)
     {
@@ -47,40 +41,42 @@ bool KineticClient_Connect(
         return false;
     }
 
-    if (host == NULL)
+    if (config == NULL)
     {
-        LOG("Specified host is NULL!");
+        LOG("Specified KineticConnectionConfig is NULL!");
         return false;
     }
 
-    if (key.len < 1)
+    if (strlen(config->host) == 0)
+    {
+        LOG("No host specified!");
+        return false;
+    }
+
+    if (config->key.len == 0)
     {
         LOG("Specified HMAC key is empty!");
         return false;
     }
 
-    if (key.data == NULL)
+    if (config->key.data == NULL)
     {
         LOG("Specified HMAC key is NULL!");
         return false;
     }
 
-    // KINETIC_CONNECTION_INIT(connection, identity, key);
-
-    if (!KineticConnection_Connect(connection, host, port, nonBlocking,
-        clusterVersion, identity, key))
+    if (!KineticConnection_Connect(connection, config))
     {
         connection->connected = false;
         connection->socketDescriptor = -1;
-        char message[64];
-        sprintf(message, "Failed creating connection to %s:%d", host, port);
-        LOG(message);
+        LOGF("Failed creating connection to %s:%d", config->host, config->port);
         return false;
     }
 
+    // Connection succeeded!
     connection->connected = true;
 
-    return true;
+    return connection->connected;
 }
 
 void KineticClient_Disconnect(

@@ -6,26 +6,22 @@
 typedef struct _SystemTestInstance
 {
     bool testIgnored;
+    int expectedSequence;
     bool nonBlocking;
     KineticOperation operation;
     KineticPDU request;
     KineticPDU response;
     KineticMessage requestMsg;
     ByteArray value;
+    uint8_t data[PDU_VALUE_MAX_LEN];
 } SystemTestInstance;
 
 typedef struct _SystemTestFixture
 {
-    char host[HOST_NAME_MAX];
-    int port;
-    int64_t clusterVersion;
-    int64_t identity;
-    int64_t expectedSequence;
-    ByteArray hmacKey;
-    uint8_t data[PDU_VALUE_MAX_LEN];
-    bool connected;
+    KineticConnectionConfig config;
     KineticConnection connection;
     SystemTestInstance instance;
+    int64_t expectedSequence;
 } SystemTestFixture;
 
 void SystemTestSetup(SystemTestFixture* fixture);
@@ -36,9 +32,9 @@ void SystemTestSuiteTearDown(SystemTestFixture* fixture);
 void test_Suite_TearDown(void) \
 { \
     TEST_ASSERT_NOT_NULL_MESSAGE((_fixture), "System test fixture passed to 'SYSTEM_TEST_SUITE_TEARDOWN' is NULL!"); \
-    if ((_fixture)->connected) \
+    if ((_fixture)->connection.connected) \
         KineticClient_Disconnect(&(_fixture)->connection); \
-    (_fixture)->connected = false; \
+    (_fixture)->connection.connected = false; \
     (_fixture)->instance.testIgnored = true; \
 }
 

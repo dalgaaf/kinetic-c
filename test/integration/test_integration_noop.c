@@ -44,6 +44,16 @@ void tearDown(void)
 
 void test_NoOp_should_succeed(void)
 {
+    KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     bool success;
     KineticOperation operation;
     KineticPDU request, response;
@@ -53,7 +63,6 @@ void test_NoOp_should_succeed(void)
     const int64_t identity = 1234;
     const ByteArray key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ");
     const int socketDesc = 783;
-    KineticConnection connection;
     KineticMessage requestMsg;
 
     ByteArray requestHeader = {
@@ -66,10 +75,9 @@ void test_NoOp_should_succeed(void)
         .data = response.protobufScratch };
 
     // Establish connection
-    KINETIC_CONNECTION_INIT(&connection, identity, key);
     connection.socketDescriptor = socketDesc; // configure dummy socket descriptor
-    KineticConnection_Connect_ExpectAndReturn(&connection, host, port, false, clusterVersion, identity, key, true);
-    success = KineticClient_Connect(&connection, host, port, false, clusterVersion, identity, key);
+    KineticConnection_Connect_ExpectAndReturn(&connection, &connectionConfig, true);
+    success = KineticClient_Connect(&connection, &connectionConfig);
     TEST_ASSERT_TRUE(success);
     TEST_ASSERT_EQUAL_INT(socketDesc, connection.socketDescriptor); // Ensure socket descriptor still intact!
 

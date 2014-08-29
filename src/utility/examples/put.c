@@ -20,38 +20,23 @@
 
 #include "put.h"
 
-int Put(
-    const char* host,
-    int port,
-    bool nonBlocking,
-    int64_t clusterVersion,
-    int64_t identity,
-    ByteArray hmacKey,
-    Kinetic_KeyValue* metadata,
-    const ByteArray value)
+KineticProto_Status_StatusCode Put(Kinetic_KeyValue* metadata, const ByteArray value)
 {
     KineticOperation operation;
     KineticPDU request, response;
-    KineticConnection connection;
     KineticMessage requestMsg;
-    KineticProto_Status_StatusCode status = KINETIC_PROTO_STATUS_STATUS_CODE_INVALID_STATUS_CODE;
-    bool success;
-
-    KineticClient_Init(NULL);
-    success = KineticClient_Connect(&connection, host, port, nonBlocking,
-                                    clusterVersion, identity, hmacKey);
-    assert(success);
+    KineticProto_Status_StatusCode status =
+        KINETIC_PROTO_STATUS_STATUS_CODE_INVALID_STATUS_CODE;
 
     operation = KineticClient_CreateOperation(
         &connection, &request, &requestMsg, &response);
 
     status = KineticClient_Put(&operation, metadata, value);
 
-    if (status == KINETIC_PROTO_STATUS_STATUS_CODE_SUCCESS) {
+    if (status == KINETIC_PROTO_STATUS_STATUS_CODE_SUCCESS)
+    {
         printf("Put operation completed successfully. Your data has been stored!\n");
-        status = 0;
     }
 
-    KineticClient_Disconnect(&connection);
     return status;
 }

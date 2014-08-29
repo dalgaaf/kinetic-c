@@ -38,11 +38,11 @@
 #include <stdlib.h>
 
 static SystemTestFixture Fixture = {
-    .host = "localhost",
-    .port = KINETIC_PORT,
-    .clusterVersion = 0,
-    .identity = 1,
-    .hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("asdfasdf"),
+    .config.host = "localhost",
+    .config.port = KINETIC_PORT,
+    .config.clusterVersion = 0,
+    .config.identity =  1,
+    .config.key = BYTE_ARRAY_INIT_FROM_CSTRING("asdfasdf")
 };
 
 static ByteArray valueKey = BYTE_ARRAY_INIT_FROM_CSTRING("my_key_3.1415927");
@@ -130,4 +130,4 @@ void test_Put_should_update_object_data_on_device_and_update_version(void)
 /*******************************************************************************
 * ENSURE THIS IS AFTER ALL TESTS IN THE TEST SUITE
 *******************************************************************************/
-SYSTEM_TEST_SUITE_TEARDOWN(&Fixture);
+SYSTEM_TEST_SUITE_TEARDOWN(&Fixture)

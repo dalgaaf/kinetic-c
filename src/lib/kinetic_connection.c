@@ -22,24 +22,13 @@
 #include "kinetic_socket.h"
 #include <string.h>
 
-bool KineticConnection_Connect(KineticConnection* const connection,
-    const char* host, int port, bool nonBlocking,
-    int64_t clusterVersion, int64_t identity, const ByteArray key)
+bool KineticConnection_Connect(KineticConnection * connection,
+    KineticConnectionConfig const * config)
 {
-    connection->connected = false;
-    connection->nonBlocking = nonBlocking;
-    connection->port = port;
-    connection->socketDescriptor = -1;
-    connection->clusterVersion = clusterVersion;
-    connection->identity = identity;
-
-    strcpy(connection->host, host);
-    connection->key.data = connection->keyData;
-    memcpy(connection->key.data, key.data, key.len);
-    connection->key.len = key.len;
+    KINETIC_CONNECTION_INIT(connection, config);
 
     connection->socketDescriptor = KineticSocket_Connect(
-        connection->host, connection->port, nonBlocking);
+        (char*)config->host, config->port, config->nonBlocking);
     connection->connected = (connection->socketDescriptor >= 0);
 
     return connection->connected;

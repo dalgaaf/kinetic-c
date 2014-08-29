@@ -38,8 +38,14 @@ void tearDown(void)
 void test_KineticOperation_should_have_all_supported_fields(void)
 {
     KineticConnection connection;
-    const ByteArray hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("some_hmac_key");
-    KINETIC_CONNECTION_INIT(&connection, 12, hmacKey);
+    const KineticConnectionConfig connectionConfig = {
+        .host = "localhost",
+        .port = KINETIC_PORT,
+        .clusterVersion = 12,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("some_hmac_key"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
     KineticPDU request, response;
 
     KineticOperation op = {
@@ -55,9 +61,16 @@ void test_KineticOperation_should_have_all_supported_fields(void)
 
 void test_KineticOperation_BuildNoop_should_build_and_execute_a_NOOP_operation(void)
 {
+    const KineticConnectionConfig connectionConfig = {
+        .host = "localhost",
+        .port = KINETIC_PORT,
+        .clusterVersion = 12,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("some_hmac_key"),
+    };
     KineticConnection connection;
     const ByteArray hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("some_hmac_key");
-    KINETIC_CONNECTION_INIT(&connection, 12, hmacKey);
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
     KineticMessage requestMsg, responseMsg;
     KineticPDU request, response;
     KINETIC_MESSAGE_INIT(&requestMsg);

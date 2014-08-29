@@ -38,11 +38,11 @@
 #include <stdlib.h>
 
 static SystemTestFixture Fixture = {
-    .host = "localhost",
-    .port = KINETIC_PORT,
-    .clusterVersion = 0,
-    .identity =  1,
-    .hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("asdfasdf"),
+    .config.host = "localhost",
+    .config.port = KINETIC_PORT,
+    .config.clusterVersion = 0,
+    .config.identity =  1,
+    .config.key = BYTE_ARRAY_INIT_FROM_CSTRING("asdfasdf")
 };
 
 static ByteArray valueKey = BYTE_ARRAY_INIT_FROM_CSTRING("GET system test blob");
@@ -54,15 +54,15 @@ void setUp(void)
     SystemTestSetup(&Fixture);
 
     // Setup to write some test data
-    Fixture.instance.value = testValue;
-    Fixture.instance.request.value = testValue;
-
     Kinetic_KeyValue metadata = {
         .key = valueKey,
         .newVersion = BYTE_ARRAY_INIT_FROM_CSTRING("v1.0"),
         .tag = tag,
         .algorithm = KINETIC_PROTO_ALGORITHM_SHA1,
     };
+
+    Fixture.instance.request.value = testValue;
+
     Fixture.instance.value = testValue;
 
     KineticProto_Status_StatusCode status =
@@ -81,12 +81,6 @@ void tearDown(void)
 
 // -----------------------------------------------------------------------------
 // Put Command - Write a blob of data to a Kinetic Device
-//
-// Inspected Request: (m/d/y)
-// -----------------------------------------------------------------------------
-//
-//  TBD!
-//
 void test_Get_should_retrieve_object_and_metadata_from_device(void)
 {
     Kinetic_KeyValue metadata = {.key = valueKey};
@@ -109,4 +103,4 @@ void test_Get_should_retrieve_object_and_metadata_from_device(void)
 /*******************************************************************************
 * ENSURE THIS IS AFTER ALL TESTS IN THE TEST SUITE
 *******************************************************************************/
-SYSTEM_TEST_SUITE_TEARDOWN(&Fixture);
+SYSTEM_TEST_SUITE_TEARDOWN(&Fixture)

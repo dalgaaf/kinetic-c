@@ -29,20 +29,18 @@
 #include "put.h"
 #include "get.h"
 
-typedef struct _Arguments {
+typedef struct _Arguments
+{
+    KineticSession session,
     char host[HOST_NAME_MAX];
     int port;
     int nonBlocking;
     int useTls;
     int64_t clusterVersion;
     int64_t identity;
-    char hmacKey[KINETIC_MAX_KEY_LEN];
-    uint8_t value[PDU_VALUE_MAX_LEN];
-    int64_t valueLength;
-    char valueKey[KINETIC_MAX_KEY_LEN];
-    char version[32];
-    char newVersion[32];
-    KineticProto_Algorithm algorithm;
+    ByteArray hmacKey;
+    Kinetic_KeyValue metadata;
+    ByteBuffer value;
 } Arguments;
 
 int main(int argc, char** argv)
@@ -52,6 +50,7 @@ int main(int argc, char** argv)
     int optIndex = 0;
 
     // Create an ArgP processor to parse arguments
+    uint8_t valueData[PDU_VALUE_MAX_LEN];
     Arguments cfg = {
         .host = "localhost",
         .port = KINETIC_PORT,
@@ -59,24 +58,51 @@ int main(int argc, char** argv)
         .useTls = false,
         .clusterVersion = 0,
         .identity = 1,
-        .hmacKey = "asdfasdf",
-        .value = {},
-        .valueLength = 0,
-        .valueKey = "some_value_key...",
-        .version = "v1.0",
-        .newVersion = "v1.0",
+        .hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("asdfasdf"),
+        .metadata = {
+            .key = BYTE_ARRAY_INIT_FROM_CSTRING("some_value_key"),
+            .dbVersion = BYTE_ARRAY_INIT_FROM_CSTRING("v1.0"),
+            .newVersion = BYTE_ARRAY_INIT_FROM_CSTRING("v2.0"),
+            .tag = BYTE_ARRAY_INIT_FROM_CSTRING("some_value_tag"),
+            .algorithm = KINETIC_PROTO_ALGORITHM_SHA1,
+        },
+        .value = BYTE_BUFFER_INIT(valueData, 0, sizeof(valueData)),
     };
-    ByteArray hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING(cfg.hmacKey);
-    ByteArray value = {.data = cfg.value, .len = cfg.valueLength};
 
     struct option long_options[] =
     {
-        {"non-blocking", no_argument,      &cfg.nonBlocking, true},
-        {"blocking",    no_argument,       &cfg.nonBlocking, false},
-        {"tls",         no_argument,       &cfg.port,        KINETIC_TLS_PORT},
-        {"host",        required_argument, 0, 'h'},
-        {0, 0, 0, 0}
+        {"non-blocking", no_argument,       &cfg.nonBlocking, true},
+        {"blocking",     no_argument,       &cfg.nonBlocking, false},
+        {"tls",          no_argument,       &cfg.port,        KINETIC_TLS_PORT},
+        {"host",         required_argument, 0,                'h'},
+        {0, 0, 0, 0},
     };
+
+    KineticConnectionConfig = {
+        .host = ,// char host[HOST_NAME_MAX];
+        .port = ,// int port;
+        .nonBlocking = ,// bool nonBlocking;
+        .clusterVersion = ,// int64_t clusterVersion;
+        .identity = ,// int64_t identity;
+        .key = ,// ByteArray key;
+        .keyData = ,// uint8_t keyData[KINETIC_HMAC_MAX_LEN];
+    };
+
+    KineticConnection connection;
+    const char* host,
+    int port,
+    bool nonBlocking,
+    int64_t clusterVersion,
+    int64_t identity,
+    ByteArray hmacKey,
+
+    KineticClient_Init(NULL);
+    if (!KineticClient_Connect(&connection,
+        host, port, nonBlocking, clusterVersion, identity, hmacKey))
+    {
+        printf("Failed connecting to Kinetic Device!");
+        return -1;
+    }
 
     while ((opt = getopt_long(argc, argv, "h", long_options, &optIndex)) != -1)
     {
@@ -139,10 +165,7 @@ int main(int argc, char** argv)
         else if (strcmp("put", op) == 0)
         {
             unsigned int i;
-            for (i = 0; i < sizeof(cfg.value); i++)
-            {
-                cfg.value[i] = (uint8_t)(0x0ff & i);
-            }
+
 
             Kinetic_KeyValue metadata = {
                 .key = BYTE_ARRAY_INIT_FROM_CSTRING("some_value_key..."),

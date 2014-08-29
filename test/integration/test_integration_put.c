@@ -44,28 +44,27 @@ void tearDown(void)
 
 void test_Put_should_create_new_object_on_device(void)
 {
-    const char* host = "localhost";
-    const int port = 8899;
-    const int64_t clusterVersion = 9876;
-    const int64_t identity = 1234;
-    const ByteArray hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ");
-    const int socketDesc = 783;
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     KineticMessage requestMsg;
-    KineticOperation operation;
     KineticPDU request, response;
     KINETIC_PDU_INIT(&request, &connection, &requestMsg);
 
     // Establish connection
-    KINETIC_CONNECTION_INIT(&connection, identity, hmacKey);
-    connection.socketDescriptor = socketDesc; // configure dummy socket descriptor
-    KineticConnection_Connect_ExpectAndReturn(&connection, host, port, false, clusterVersion, identity, hmacKey, true);
-    bool success = KineticClient_Connect(&connection, host, port, false, clusterVersion, identity, hmacKey);
+    KineticConnection_Connect_ExpectAndReturn(&connection, &connectionConfig, true);
+    bool success = KineticClient_Connect(&connection, &connectionConfig);
     TEST_ASSERT_TRUE(success);
-    TEST_ASSERT_EQUAL_INT(socketDesc, connection.socketDescriptor); // Ensure socket descriptor still intact!
 
     // Create the operation
-    operation = KineticClient_CreateOperation(&connection, &request, &requestMsg, &response);
+    KineticOperation operation = KineticClient_CreateOperation(&connection, &request, &requestMsg, &response);
     TEST_ASSERT_EQUAL_PTR(&connection, operation.connection);
     TEST_ASSERT_EQUAL_PTR(&request, operation.request);
     TEST_ASSERT_EQUAL_PTR(&requestMsg, operation.request->message);
@@ -140,24 +139,25 @@ void test_Put_should_create_new_object_on_device(void)
 
 void test_Put_should_update_object_data_on_device(void)
 {
+    KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     KineticOperation operation;
     KineticPDU request, response;
-    const char* host = "localhost";
-    const int port = 8899;
-    const int64_t clusterVersion = 9876;
-    const int64_t identity = 1234;
-    const ByteArray hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ");
-    const int socketDesc = 783;
-    KineticConnection connection;
     KineticMessage requestMsg;
 
     // Establish connection
-    KINETIC_CONNECTION_INIT(&connection, identity, hmacKey);
     connection.socketDescriptor = socketDesc; // configure dummy socket descriptor
-    KineticConnection_Connect_ExpectAndReturn(&connection, host, port, false, clusterVersion, identity, hmacKey, true);
-    bool success = KineticClient_Connect(&connection, host, port, false, clusterVersion, identity, hmacKey);
+    KineticConnection_Connect_ExpectAndReturn(&connection, &connectionConfig, true);
+    bool success = KineticClient_Connect(&connection, &connectionConfig);
     TEST_ASSERT_TRUE(success);
-    TEST_ASSERT_EQUAL_INT(socketDesc, connection.socketDescriptor); // Ensure socket descriptor still intact!
 
     // Create the operation
     operation = KineticClient_CreateOperation(&connection, &request, &requestMsg, &response);
@@ -235,24 +235,26 @@ void test_Put_should_update_object_data_on_device(void)
 }
 
 void test_Put_should_update_object_data_on_device_and_update_version(void)
-{    KineticOperation operation;
-    KineticPDU request, response;
-    const char* host = "localhost";
-    const int port = 8899;
-    const int64_t clusterVersion = 9876;
-    const int64_t identity = 1234;
-    const ByteArray hmacKey = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ");
-    const int socketDesc = 783;
+{
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
+    KineticOperation operation;
+    KineticPDU request, response;
     KineticMessage requestMsg;
 
     // Establish connection
-    KINETIC_CONNECTION_INIT(&connection, identity, hmacKey);
     connection.socketDescriptor = socketDesc; // configure dummy socket descriptor
-    KineticConnection_Connect_ExpectAndReturn(&connection, host, port, false, clusterVersion, identity, hmacKey, true);
-    bool success = KineticClient_Connect(&connection, host, port, false, clusterVersion, identity, hmacKey);
+    KineticConnection_Connect_ExpectAndReturn(&connection, &connectionConfig, true);
+    bool success = KineticClient_Connect(&connection, &connectionConfig);
     TEST_ASSERT_TRUE(success);
-    TEST_ASSERT_EQUAL_INT(socketDesc, connection.socketDescriptor); // Ensure socket descriptor still intact!
 
     // Create the operation
     operation = KineticClient_CreateOperation(&connection, &request, &requestMsg, &response);
@@ -293,11 +295,7 @@ void test_Put_should_update_object_data_on_device_and_update_version(void)
     // Create value payload
     uint8_t valueBuffer[PDU_VALUE_MAX_LEN];
     ByteArray value = {.data = valueBuffer, .len = sizeof(valueBuffer)};
-    int i;
-    for (i = 0; i < value.len; i++)
-    {
-        value.data[i] = (uint8_t)(0x0ff & i);
-    }
+    BYTE_ARRAY_FILL_WITH_DUMMY_DATA(value);
 
     // Initialize response message status and HMAC, since receipt of packed protobuf is mocked out
     uint8_t hmacData[64];

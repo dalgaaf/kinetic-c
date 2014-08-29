@@ -41,6 +41,15 @@ void tearDown(void)
 void test_KineticClient_NoOp_should_execute_NOOP_operation(void)
 {
     KineticConnection connection;
+    const KineticConnectionConfig connectionConfig = {
+        .host = "nicehost.org",
+        .port = 8899,
+        .clusterVersion = 9876,
+        .identity = 1234,
+        .key = BYTE_ARRAY_INIT_FROM_CSTRING("123abcXYZ"),
+    };
+    KINETIC_CONNECTION_INIT(&connection, &connectionConfig);
+
     KineticOperation operation;
     KineticMessage requestMsg;
     KineticPDU request, response;
@@ -51,7 +60,6 @@ void test_KineticClient_NoOp_should_execute_NOOP_operation(void)
     KINETIC_MESSAGE_INIT(&requestMsg);
     request.message = &requestMsg;
 
-    KINETIC_CONNECTION_INIT(&connection, 12, key);
     KineticMessage_Init_Expect(&requestMsg);
     KineticPDU_Init_Expect(&request, &connection, &requestMsg);
     KineticPDU_Init_Expect(&response, &connection, NULL);

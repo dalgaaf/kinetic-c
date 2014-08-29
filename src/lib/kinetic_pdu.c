@@ -30,6 +30,8 @@ void KineticPDU_Init(KineticPDU* const pdu,
     KineticConnection* const connection,
     KineticMessage* const message)
 {
+    assert(pdu);
+    assert(connection);
     KINETIC_PDU_INIT(pdu, connection, message);
 }
 
@@ -93,7 +95,7 @@ bool KineticPDU_Send(KineticPDU* const request)
 
     // Populate the HMAC for the protobuf
     KineticHMAC_Init(&request->hmac, KINETIC_PROTO_SECURITY_ACL_HMACALGORITHM_HmacSHA1);
-    KineticHMAC_Populate(&request->hmac, &request->message->proto, request->connection->key);
+    KineticHMAC_Populate(&request->hmac, &request->message->proto, request->connection->config.key);
 
     // Repack PDU header length fields
     request->header.versionPrefix = 'F';
@@ -184,7 +186,7 @@ bool KineticPDU_Receive(KineticPDU* const response)
     }
 
     // Validate the HMAC for the recevied protobuf message
-    if (!KineticHMAC_Validate(response->proto, response->connection->key))
+    if (!KineticHMAC_Validate(response->proto, response->connection->config.key))
     {
         LOG("Received PDU protobuf message has invalid HMAC!");
         // FIXME!! success = false;

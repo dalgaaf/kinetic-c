@@ -30,7 +30,7 @@
  *
  * @param logFile Path to log file. Specify NULL to log to STDOUT.
  */
-void KineticClient_Init(const char* logFile);
+void KineticClient_Init(char const* logFile);
 
 /**
  * @brief Configures the session and establishes a socket connection to a Kinetic Device
@@ -46,12 +46,7 @@ void KineticClient_Init(const char* logFile);
  * @return                  Returns true if connection succeeded
  */
 bool KineticClient_Connect(KineticConnection* connection,
-    const char* host,
-    int port,
-    bool nonBlocking,
-    int64_t clusterVersion,
-    int64_t identity,
-    ByteArray key);
+    KineticConnectionConfig const* config);
 
 /**
  * @brief Closes the socket connection to a host.
