@@ -21,8 +21,7 @@
 #ifndef _KINETIC_SOCKET_H
 #define _KINETIC_SOCKET_H
 
-#include "kinetic_types.h"
-#include "kinetic_message.h"
+#include "kinetic_types_internal.h"
 
 int KineticSocket_Connect(char* host, int port, bool nonBlocking);
 void KineticSocket_Close(int socketDescriptor);

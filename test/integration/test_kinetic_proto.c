@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "protobuf-c/protobuf-c.h"
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 #include "kinetic_proto.h"
 #include "unity.h"
 

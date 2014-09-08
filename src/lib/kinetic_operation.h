@@ -21,7 +21,7 @@
 #ifndef _KINETIC_OPERATION_H
 #define _KINETIC_OPERATION_H
 
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 
 void KineticOperation_BuildNoop(KineticOperation* operation);
 void KineticOperation_BuildPut(KineticOperation* operation,

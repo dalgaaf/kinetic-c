@@ -24,7 +24,7 @@
 #include <getopt.h>
 #include <stdbool.h>
 
-#include "kinetic.h"
+#include "kinetic_client.h"
 #include "noop.h"
 #include "put.h"
 #include "get.h"

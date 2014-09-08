@@ -22,7 +22,7 @@
 #define _UNITY_HELPER
 
 #include "unity.h"
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 #include <stdio.h>
 #include <string.h>
 

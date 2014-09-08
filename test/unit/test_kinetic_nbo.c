@@ -20,7 +20,7 @@
 
 #include "unity.h"
 #include "unity_helper.h"
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 #include "kinetic_nbo.h"
 #include <arpa/inet.h>
 

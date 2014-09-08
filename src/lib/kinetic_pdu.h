@@ -21,7 +21,7 @@
 #ifndef _KINETIC_PDU_H
 #define _KINETIC_PDU_H
 
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 
 void KineticPDU_Init(KineticPDU* const pdu,
     KineticConnection* const connection);

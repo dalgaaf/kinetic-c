@@ -21,7 +21,7 @@
 #include "unity.h"
 #include "unity_helper.h"
 #include "protobuf-c/protobuf-c.h"
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 #include "kinetic_proto.h"
 #include "kinetic_message.h"
 

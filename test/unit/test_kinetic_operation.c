@@ -20,7 +20,7 @@
 
 #include "unity_helper.h"
 #include "protobuf-c/protobuf-c.h"
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 #include "kinetic_operation.h"
 #include "kinetic_proto.h"
 #include "kinetic_logger.h"

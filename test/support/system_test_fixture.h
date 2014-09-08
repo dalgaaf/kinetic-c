@@ -1,7 +1,7 @@
 #ifndef _SYSTEM_TEST_FIXTURE
 #define _SYSTEM_TEST_FIXTURE
 
-#include "kinetic_types.h"
+#include "kinetic_types_internal.h"
 
 typedef struct _SystemTestInstance
 {

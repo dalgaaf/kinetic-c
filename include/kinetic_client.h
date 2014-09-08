@@ -24,16 +24,17 @@
 #include "kinetic_types.h"
 
 /**
- * Initializes the Kinetic API andcsonfigures logging destination.
+ * Initializes the Kinetic API, onfigures logging destination and
+ * returns a session handle
  *
  * @param logFile Path to log file. Specify NULL to log to STDOUT.
  */
-void KineticClient_Init(const char* logFile);
+int KineticClient_Init(KineticSession* session);
 
 /**
  * @brief Configures the session and establishes a socket connection to a Kinetic Device
  *
- * @param connection        KineticConnection instance to configure with connection info
+ * @param session        KineticSession instance to configure with connection info
  * @param host              Host name or IP address to connect to
  * @param port              Port to establish socket connection on
  * @param nonBlocking       Set to true for non-blocking or false for blocking I/O
@@ -43,35 +44,14 @@ void KineticClient_Init(const char* logFile);
  *
  * @return                  Returns true if connection succeeded
  */
-bool KineticClient_Connect(KineticConnection* connection,
-    const char* host,
-    int port,
-    bool nonBlocking,
-    int64_t clusterVersion,
-    int64_t identity,
-    ByteArray key);
+bool KineticClient_Connect(KineticSession* session);
 
 /**
- * @brief Closes the socket connection to a host.
+ * @brief Closes the socket connection to a host and terminates the session
  *
- * @param connection    KineticConnection instance
+ * @param session    KineticSession instance
  */
-void KineticClient_Disconnect(KineticConnection* connection);
-
-/**
- * @brief Creates and initializes a Kinetic operation.
- *
- * @param connection    KineticConnection instance to associate with operation
- * @param request       KineticPDU instance to use for request
- * @param requestMsg    KineticMessage instance to use for request
- * @param response      KineticPDU instance to use for reponse
- *
- * @return              Returns a configured operation instance
- */
-KineticOperation KineticClient_CreateOperation(
-    KineticConnection* connection,
-    KineticPDU* request,
-    KineticPDU* response);
+void KineticClient_Disconnect(KineticSession* session);
 
 /**
  * @brief Executes a NOOP command to test whether the Kinetic Device is operational
@@ -80,7 +60,7 @@ KineticOperation KineticClient_CreateOperation(
  *
  * @return              Returns 0 upon succes, -1 or the Kinetic status code upon failure
  */
-KineticProto_Status_StatusCode KineticClient_NoOp(KineticOperation* operation);
+Kinetic_Status KineticClient_NoOp(KineticSession* session);
 
 /**
  * @brief Executes a PUT command to write data to the Kinetic Device
@@ -89,7 +69,7 @@ KineticProto_Status_StatusCode KineticClient_NoOp(KineticOperation* operation);
  *
  * @return              Returns 0 upon succes, -1 or the Kinetic status code upon failure
  */
-KineticProto_Status_StatusCode KineticClient_Put(KineticOperation* operation,
+Kinetic_Status KineticClient_Put(KineticSession* session,
     const Kinetic_KeyValue* metadata,
     ByteArray value);
 
@@ -100,7 +80,7 @@ KineticProto_Status_StatusCode KineticClient_Put(KineticOperation* operation,
  *
  * @return              Returns 0 upon succes, -1 or the Kinetic status code upon failure
  */
-KineticProto_Status_StatusCode KineticClient_Get(KineticOperation* operation,
+Kinetic_Status KineticClient_Get(KineticSession* session,
     const Kinetic_KeyValue* metadata,
     const ByteArray value);
 

@@ -19,6 +19,7 @@
 */
 
 #include "kinetic_socket.h"
+#include "kinetic_message.h"
 #include "kinetic_logger.h"
 #include "protobuf-c/protobuf-c.h"
 #ifndef _BSD_SOURCE

@@ -19,6 +19,7 @@
 */
 
 #include "kinetic_client.h"
+#include "kinetic_types_internal.h"
 #include "kinetic_pdu.h"
 #include "kinetic_operation.h"
 #include "kinetic_connection.h"
@@ -27,25 +28,45 @@
 #include "kinetic_logger.h"
 #include <stdio.h>
 
+static KineticConnection* Connections[KINETIC_SESSIONS_MAX];
+
 KineticProto_Status_StatusCode KineticClient_ExecuteOperation(KineticOperation* operation);
 
-void KineticClient_Init(const char* logFile)
+/**
+ * @brief Creates and initializes a Kinetic operation.
+ *
+ * @param connection    KineticConnection instance to associate with operation
+ * @param request       KineticPDU instance to use for request
+ * @param requestMsg    KineticMessage instance to use for request
+ * @param response      KineticPDU instance to use for reponse
+ *
+ * @return              Returns a configured operation instance
+ */
+KineticOperation KineticClient_CreateOperation(
+    KineticConnection* connection,
+    KineticPDU* request,
+    KineticPDU* response);
+
+int KineticClient_Init(KineticSession* session)
 {
     KineticLogger_Init(logFile);
+    for(int i = 0; i < KINETIC_PDUS_PER_SESSION_MAX; i++)
+    {
+        if (Connections[i] != NULL)
+        {
+            Connections[i] = malloc(sizeof(Connections));
+            session->handle = i;
+            return i;
+        }
+    }
+    return -1;
 }
 
-bool KineticClient_Connect(
-    KineticConnection* connection,
-    const char* host,
-    int port,
-    bool nonBlocking,
-    int64_t clusterVersion,
-    int64_t identity,
-    ByteArray key)
+bool KineticClient_Connect(KineticSession* session)
 {
-    if (connection == NULL)
+    if (session == NULL)
     {
-        LOG("Specified KineticConnection is NULL!");
+        LOG("Specified KineticSession is NULL!");
         return false;
     }
 
@@ -67,28 +88,30 @@ bool KineticClient_Connect(
         return false;
     }
 
-    // KINETIC_CONNECTION_INIT(connection, identity, key);
-
-    if (!KineticConnection_Connect(connection, host, port, nonBlocking,
-        clusterVersion, identity, key))
+    if (!KineticConnection_Connect(&Connections[session->handle],
+        session->host, session->port, session->nonBlocking,
+        session->clusterVersion, session->identity, session->key))
     {
-        connection->connected = false;
-        connection->socketDescriptor = -1;
-        char message[64];
-        sprintf(message, "Failed creating connection to %s:%d", host, port);
-        LOG(message);
+        Connections[session->handle].connected = false;
+        Connections[session->handle].socketDescriptor = -1;
+        LOGF("Failed creating connection to %s:%d",
+            session->host, session->port);
         return false;
     }
 
-    connection->connected = true;
+    &Connections[session->handle].connected = true;
 
     return true;
 }
 
-void KineticClient_Disconnect(
-    KineticConnection* connection)
+void KineticClient_Disconnect(KineticSession* session)
 {
-   KineticConnection_Disconnect(connection);
+    if (session->handle >= 0)
+    {
+        KineticConnection_Disconnect(&Connections[session->handle]);
+        free(Connections[session->handle]);
+        Connections[session->handle] = NULL;
+    }
 }
 
 KineticOperation KineticClient_CreateOperation(
@@ -117,16 +140,18 @@ KineticOperation KineticClient_CreateOperation(
     }
 
     KineticPDU_Init(request, connection);
+    KINETIC_PDU_INIT_WITH_MESSAGE(request, connection);
     KineticPDU_Init(response, connection);
 
     op.connection = connection;
     op.request = request;
+    request->proto->command = &request->message.command;
     op.response = response;
 
     return op;
 }
 
-KineticProto_Status_StatusCode KineticClient_NoOp(KineticOperation* operation)
+Kinetic_Status KineticClient_NoOp(KineticSession* session)
 {
     assert(operation->connection != NULL);
     assert(operation->request != NULL);
@@ -136,10 +161,10 @@ KineticProto_Status_StatusCode KineticClient_NoOp(KineticOperation* operation)
     KineticOperation_BuildNoop(operation);
 
     // Execute the operation
-    return KineticClient_ExecuteOperation(operation);
+    return (Kinetic_Status)KineticClient_ExecuteOperation(operation);
 }
 
-KineticProto_Status_StatusCode KineticClient_Put(KineticOperation* operation,
+Kinetic_Status KineticClient_Put(KineticSession* session,
     const Kinetic_KeyValue* metadata,
     const ByteArray value)
 {
@@ -153,10 +178,10 @@ KineticProto_Status_StatusCode KineticClient_Put(KineticOperation* operation,
     KineticOperation_BuildPut(operation, metadata, value);
 
     // Execute the operation
-    return KineticClient_ExecuteOperation(operation);
+    return (Kinetic_Status)KineticClient_ExecuteOperation(operation);
 }
 
-KineticProto_Status_StatusCode KineticClient_Get(KineticOperation* operation,
+Kinetic_Status KineticClient_Get(KineticSession* session,
     const Kinetic_KeyValue* metadata,
     const ByteArray value)
 {
@@ -184,10 +209,10 @@ KineticProto_Status_StatusCode KineticClient_Get(KineticOperation* operation,
     KineticOperation_BuildGet(operation, metadata, responseValue);
 
     // Execute the operation
-    return KineticClient_ExecuteOperation(operation);
+    return (Kinetic_Status)KineticClient_ExecuteOperation(operation);
 }
 
-KineticProto_Status_StatusCode KineticClient_ExecuteOperation(KineticOperation* operation)
+Kinetic_Status KineticClient_ExecuteOperation(KineticOperation* operation)
 {
     KineticProto_Status_StatusCode status =
         KINETIC_PROTO_STATUS_STATUS_CODE_INVALID_STATUS_CODE;
@@ -205,6 +230,6 @@ KineticProto_Status_StatusCode KineticClient_ExecuteOperation(KineticOperation* 
         }
     }
 
-    return status;
+    return (Kinetic_Status)status;
 }
 
