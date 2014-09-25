@@ -200,8 +200,14 @@ uninstall:
 	${RM} -f ${PREFIX}/include/protobuf-c/protobuf-c.h
 	${RM} -f ${PREFIX}/include/protobuf-c.h
 
+eclipse: clean default
+
+all:
+
 # all: uninstall clean test default install run rund
-all: uninstall clean test default install run
+#all: uninstall clean test default install run
+all:
+
 	@echo
 	@echo --------------------------------------------------------------------------------
 	@echo $(PROJECT) build completed successfully!
