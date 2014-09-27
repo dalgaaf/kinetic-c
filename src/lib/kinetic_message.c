@@ -63,4 +63,5 @@ void KineticMessage_ConfigureKeyValue(KineticMessage* const message,
     message->keyValue.has_metadataOnly = metadata->metadataOnly;
     if (message->keyValue.has_metadataOnly) {
         message->keyValue.metadataOnly = metadata->metadataOnly; }
+    message->keyValue.has_force = message->keyValue.force = metadata->force;
 }
